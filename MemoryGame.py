@@ -1,6 +1,6 @@
 import random
 import time
-import os
+from Utils import clear_screen
 
 
 def generate_sequence(difficulty):
@@ -30,7 +30,7 @@ def play_memory_game(difficulty):
     print("Memorize the numbers:")
     print(sequence)
     time.sleep(0.7)
-    os.system('cls')
+    clear_screen()
     print("Now enter the numbers you remember:")
     user_list = get_list_from_user(difficulty)
     return is_list_equal(sequence, user_list)
