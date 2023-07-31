@@ -1,7 +1,7 @@
-from GuessGame import play_guess_game
-from MemoryGame import play_memory_game
-from CurrencyRouletteGame import play_currency_roulette
-from Score import add_score
+from Games.GuessGame import play_guess_game
+from Games.MemoryGame import play_memory_game
+from Games.CurrencyRouletteGame import play_currency_roulette
+from Scores.Score import add_score
 
 
 def welcome():
@@ -37,22 +37,30 @@ def load_game():
         difficulty_level = int(difficulty_level)
 
         if game_choice == 1:
-            MemoryGameResult = play_memory_game(difficulty_level)
-            if MemoryGameResult:
+            memory_game_result = play_memory_game(difficulty_level)
+            if memory_game_result:
                 print("You won!")
                 add_score(difficulty_level)
+            else:
+                print("You lost.")
+
 
         elif game_choice == 2:
-            GuessGameResult = play_guess_game(difficulty_level)
-            if GuessGameResult:
+            guess_game_result = play_guess_game(difficulty_level)
+            if guess_game_result:
                 print("You won!")
                 add_score(difficulty_level)
+            else:
+                print("You lost.")
 
         elif game_choice == 3:
-            CurrencyRouletteGameResult = play_currency_roulette(difficulty_level)
-            if CurrencyRouletteGameResult:
+            currency_roulette_game_result = play_currency_roulette(difficulty_level)
+            if currency_roulette_game_result:
                 print("You won!")
                 add_score(difficulty_level)
+            else:
+                print("You lost.")
+
 
         else:
             print("Invalid game choice. Please choose a valid game number.")
