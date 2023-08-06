@@ -9,8 +9,8 @@ To get started with the games, follow these steps:
 1. Clone the repository:
 
    ```
-   git clone 
-   cd 
+   git clone https://github.com/DolevGel/WorldOfGames.git
+   cd WorldOfGames
    ```
 
 2. Run the MainGame.py script:
