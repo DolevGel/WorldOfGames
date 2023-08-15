@@ -1,4 +1,4 @@
-SCORES_FILE_NAME = "Scores.txt"
+SCORES_FILE_NAME = "Scores/Scores.txt"  # Path to the Scores.txt file
 POINTS_OF_WINNING = 0
 
 

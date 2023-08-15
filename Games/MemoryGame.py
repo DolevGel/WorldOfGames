@@ -11,13 +11,20 @@ def get_list_from_user(difficulty):
     user_list = []
     for _ in range(difficulty):
         while True:
-            num = int(input("Enter a number between 1 and 101: "))
+            try:
+                num_str = input("Enter a number between 1 and 101: ")
+                if num_str.strip() == "":
+                    print("Invalid input. Please enter a non-empty number.")
+                    continue
 
-            if 1 <= num <= 101:
-                user_list.append(num)
-                break
-            else:
-                print("Invalid input. Please enter a number within the range.")
+                num = int(num_str)
+                if 1 <= num <= 101:
+                    user_list.append(num)
+                    break
+                else:
+                    print("Invalid input. Please enter a number within the range.")
+            except ValueError:
+                print("Invalid input. Please enter a valid number.")
     return user_list
 
 

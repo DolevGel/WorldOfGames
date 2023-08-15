@@ -1,9 +1,8 @@
-FROM python:3.9-slim
-
-WORKDIR /app
-
+FROM python:3.9
+WORKDIR  /app
 COPY . /app
-
+COPY requirements.txt /app
 RUN pip install --no-cache-dir -r requirements.txt
-
-CMD ["python", "your_script.py"]
+COPY Scores/Scores.txt /app/Scores.txt
+EXPOSE 5000
+CMD ["python", "MainGame.py"]

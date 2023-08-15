@@ -10,7 +10,7 @@ def get_money_interval(difficulty, total_value):
     exchange_rate = history["Close"].iloc[-1]
     lower_bound = total_value - (5 - difficulty)
     upper_bound = total_value + (5 - difficulty)
-    return (lower_bound * exchange_rate, upper_bound * exchange_rate)
+    return lower_bound * exchange_rate, upper_bound * exchange_rate
 
 
 def get_guess_from_user():
