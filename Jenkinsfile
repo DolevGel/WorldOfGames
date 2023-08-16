@@ -1,40 +1,45 @@
 pipeline {
     agent any
 
+    environment {
+        DOCKER_IMAGE_TAG = "${env.BUILD_NUMBER}"
+    }
+
     stages {
         stage('Checkout') {
             steps {
                 checkout scm
             }
         }
-        stage('Print Workspace Path') {
+        stage('Build Docker Image') {
             steps {
                 script {
-                    echo "Workspace path: ${WORKSPACE}"
+                    def dockerImage = docker.build("my-python-app:${DOCKER_IMAGE_TAG}", "-f Dockerfile .")
+                    env.DOCKER_IMAGE = dockerImage.imageName()
                 }
             }
         }
-        stage('Build') {
+        stage('Push Docker Image') {
             steps {
                 script {
-                    def containerId = docker.build("python:3.9")
-                    env.CONTAINER_ID = containerId
+                    docker.withRegistry('', 'dockerhub-credentials') {
+                        dockerImage.push("${DOCKER_IMAGE_TAG}")
+                    }
                 }
             }
         }
-        stage('Run') {
+        stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    def container = docker.image('python:3.9').run("-p 5000:5000 -v /app/Scores.txt:/app/Scores.txt")
-                    env.CONTAINER_ID = container.id
+                    sh "kubectl apply -f path/to/your/deployment.yaml"
                 }
             }
         }
-        stage('Test') {
+        stage('Run Tests') {
             steps {
                 script {
                     try {
-                        bat 'python e2e.py'
+                        sh 'python e2e.py'
                     } catch (Exception e) {
                         currentBuild.result = 'FAILURE'
                         throw e
@@ -47,17 +52,17 @@ pipeline {
     post {
         always {
             script {
-                def containerId = env.CONTAINER_ID ?: ""
-                if (containerId) {
-                    def container = docker.image('python:3.9').stop("${containerId}")
-                }
+                sh "docker stop ${DOCKER_IMAGE_TAG} && docker rm ${DOCKER_IMAGE_TAG}"
             }
         }
         success {
             script {
-                docker.withRegistry('', 'dockerhub-credentials') {
-                    docker.image("python:3.9").push("${env.BUILD_NUMBER}")
-                }
+                echo "Build and deployment succeeded!"
+            }
+        }
+        failure {
+            script {
+                echo "Build and deployment failed!"
             }
         }
     }
