@@ -18,7 +18,7 @@ pipeline {
                     sh "docker-compose build"
 
                     // Run the Docker container using Docker Compose
-                    sh "docker-compose up -d"
+                    sh "docker-compose up"
                 }
             }
         }
