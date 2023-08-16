@@ -21,11 +21,11 @@ pipeline {
             steps {
                 script {
                     // Push the Docker image to Docker Hub
-                    docker.withRegistry('', 'dockerhub-credentials') {
+                    withDockerRegistry(credentialsId: 'Dolev', url: '') {
                         def dockerImage = docker.image("python:3.9")
                         dockerImage.push("${env.BUILD_NUMBER}")
-                    }
-                }
+            }
+        }
             }
         }
         stage('Run Tests') {
