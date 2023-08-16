@@ -1,44 +1,44 @@
+@Library('docker') _
+
 pipeline {
     agent any
 
     stages {
-        stage('Checkout') {
+        stage('Checkout SCM') {
             steps {
-                checkout scm
+                script {
+                    def gitUrl = 'https://github.com/DolevGel/WorldOfGames.git'
+                    def gitCreds = credentials('Dolev') // Replace 'Dolev' with the actual credentials ID
+
+                    checkout([$class: 'GitSCM',
+                              branches: [[name: '*/master']],
+                              userRemoteConfigs: [[credentialsId: gitCreds.id, url: gitUrl]]])
+                }
             }
         }
+
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Build the Docker image
-                    def dockerImage = docker.build("python:3.9")
-                    // Tag the image with the build number
-                    dockerImage.tag("${env.BUILD_NUMBER}")
+                    def dockerImage = docker.build("my-image:${env.BUILD_NUMBER}")
                 }
             }
         }
+
         stage('Push Docker Image') {
             steps {
                 script {
-                    // Push the Docker image to Docker Hub
-                    withDockerRegistry(credentialsId: 'Dolev', url: '') {
-                        def dockerImage = docker.image("python:3.9")
-                        dockerImage.push("${env.BUILD_NUMBER}")
-            }
-        }
-            }
-        }
-        stage('Run Tests') {
-            steps {
-                script {
-                    try {
-                        // Run your tests here
-                        sh 'python e2e.py'
-                    } catch (Exception e) {
-                        currentBuild.result = 'FAILURE'
-                        throw e
+                    withDockerRegistry(credentialsId: 'Dolev', url: 'https://index.docker.io/v1/') {
+                        def dockerImage = docker.build("my-image:${env.BUILD_NUMBER}")
+                        dockerImage.push()
                     }
                 }
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                // Add steps to run tests here
             }
         }
     }
@@ -46,12 +46,7 @@ pipeline {
     post {
         always {
             script {
-                // Stop and remove the Docker container
-                def containerId = env.CONTAINER_ID ?: ""
-                if (containerId) {
-                    sh "docker stop ${containerId}"
-                    sh "docker rm ${containerId}"
-                }
+                // Clean up or other post-build actions
             }
         }
     }
