@@ -1,24 +1,32 @@
 pipeline {
     agent any
 
-    environment {
-        CONTAINER_ID = ""
-    }
-
     stages {
         stage('Checkout') {
             steps {
                 checkout scm
             }
         }
-        stage('Build and Run Container') {
+        stage('Print Workspace Path') {
             steps {
                 script {
-                    // Build the Docker image using Docker Compose
-                    sh "docker-compose build"
-
-                    // Run the Docker container using Docker Compose
-                    sh "docker-compose up"
+                    echo "Workspace path: ${WORKSPACE}"
+                }
+            }
+        }
+        stage('Build') {
+            steps {
+                script {
+                    def containerId = docker.build("python:3.9")
+                    env.CONTAINER_ID = containerId
+                }
+            }
+        }
+        stage('Run') {
+            steps {
+                script {
+                    def container = docker.image('python:3.9').run("-p 5000:5000 -v /app/Scores.txt:/app/Scores.txt")
+                    env.CONTAINER_ID = container.id
                 }
             }
         }
@@ -39,8 +47,10 @@ pipeline {
     post {
         always {
             script {
-                // Stop and remove the Docker container using Docker Compose
-                sh "docker-compose down"
+                def containerId = env.CONTAINER_ID ?: ""
+                if (containerId) {
+                    def container = docker.image('python:3.9').stop("${containerId}")
+                }
             }
         }
         success {
