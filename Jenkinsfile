@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKER_IMAGE_TAG = "${env.BUILD_NUMBER}"
-    }
-
     stages {
         stage('Checkout') {
             steps {
@@ -14,24 +10,21 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    def dockerImage = docker.build("my-python-app:${DOCKER_IMAGE_TAG}", "-f Dockerfile .")
-                    env.DOCKER_IMAGE = dockerImage.imageName()
+                    // Build the Docker image
+                    def dockerImage = docker.build("python:3.9")
+                    // Tag the image with the build number
+                    dockerImage.tag("${env.BUILD_NUMBER}")
                 }
             }
         }
         stage('Push Docker Image') {
             steps {
                 script {
+                    // Push the Docker image to Docker Hub
                     docker.withRegistry('', 'dockerhub-credentials') {
-                        dockerImage.push("${DOCKER_IMAGE_TAG}")
+                        def dockerImage = docker.image("python:3.9")
+                        dockerImage.push("${env.BUILD_NUMBER}")
                     }
-                }
-            }
-        }
-        stage('Deploy to Kubernetes') {
-            steps {
-                script {
-                    sh "kubectl apply -f path/to/your/deployment.yaml"
                 }
             }
         }
@@ -39,6 +32,7 @@ pipeline {
             steps {
                 script {
                     try {
+                        // Run your tests here
                         sh 'python e2e.py'
                     } catch (Exception e) {
                         currentBuild.result = 'FAILURE'
@@ -52,17 +46,12 @@ pipeline {
     post {
         always {
             script {
-                sh "docker stop ${DOCKER_IMAGE_TAG} && docker rm ${DOCKER_IMAGE_TAG}"
-            }
-        }
-        success {
-            script {
-                echo "Build and deployment succeeded!"
-            }
-        }
-        failure {
-            script {
-                echo "Build and deployment failed!"
+                // Stop and remove the Docker container
+                def containerId = env.CONTAINER_ID ?: ""
+                if (containerId) {
+                    sh "docker stop ${containerId}"
+                    sh "docker rm ${containerId}"
+                }
             }
         }
     }
