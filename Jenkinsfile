@@ -7,33 +7,34 @@ pipeline {
                 checkout scm
             }
         }
-        stage('Build Docker Image') {
+        stage('Print Workspace Path') {
             steps {
                 script {
-                    // Build the Docker image
-                    def dockerImage = docker.build("python:3.9")
-                    // Tag the image with the build number
-                    dockerImage.tag("${env.BUILD_NUMBER}")
+                    echo "Workspace path: ${WORKSPACE}"
                 }
             }
         }
-        stage('Push Docker Image') {
+        stage('Build') {
             steps {
                 script {
-                    // Push the Docker image to Docker Hub
-                    withDockerRegistry(credentialsId: 'Dolev') {
-                        def dockerImage = docker.image("python:3.9")
-                        dockerImage.push("${env.BUILD_NUMBER}")
-                    }
+                    def containerId = docker.build("python:3.9")
+                    env.CONTAINER_ID = containerId
                 }
             }
         }
-        stage('Run Tests') {
+        stage('Run') {
+            steps {
+                script {
+                    def container = docker.image('python:3.9').run("-p 5000:5000 -v /app/Scores.txt:/app/Scores.txt")
+                    env.CONTAINER_ID = container.id
+                }
+            }
+        }
+        stage('Test') {
             steps {
                 script {
                     try {
-                        // Run your tests here
-                        sh 'python e2e.py'
+                        bat 'python e2e.py'
                     } catch (Exception e) {
                         currentBuild.result = 'FAILURE'
                         throw e
@@ -46,11 +47,16 @@ pipeline {
     post {
         always {
             script {
-                // Stop and remove the Docker container
                 def containerId = env.CONTAINER_ID ?: ""
                 if (containerId) {
-                    sh "docker stop ${containerId}"
-                    sh "docker rm ${containerId}"
+                    def container = docker.image('python:3.9').stop("${containerId}")
+                }
+            }
+        }
+        success {
+            script {
+                docker.withRegistry('', 'dockerhub-credentials') {
+                    docker.image("python:3.9").push("${env.BUILD_NUMBER}")
                 }
             }
         }
