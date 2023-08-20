@@ -21,7 +21,7 @@ pipeline {
             steps {
                 script {
                     // Push the Docker image to Docker Hub
-                    withDockerRegistry(credentialsId: 'dockerhub-credentials', url: '') {
+                    withDockerRegistry(credentialsId: 'Dolev') {
                         def dockerImage = docker.image("python:3.9")
                         dockerImage.push("${env.BUILD_NUMBER}")
                     }
