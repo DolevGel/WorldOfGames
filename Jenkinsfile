@@ -1,8 +1,8 @@
 pipeline {
     agent any
-    tools {
-        docker 'Docker'
-        }
+    environment {
+        DOCKER_HOME = tool name: 'Docker', type: 'ToolType'
+    }
     stages {
         stage('Checkout') {
             steps {
